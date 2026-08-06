@@ -1,5 +1,6 @@
 package com.macondo.brickbreaker.controller;
 
+import com.macondo.brickbreaker.input.InputHandler;
 import com.macondo.brickbreaker.model.GameModel;
 import com.macondo.brickbreaker.view.GameView;
 import javafx.animation.AnimationTimer;
@@ -8,11 +9,31 @@ import javafx.scene.Scene;
 public class GameController {
     private GameModel model;
     private GameView view;
+    private InputHandler input;
     private AnimationTimer timer;
+    private boolean usingMouse = true;
 
     public GameController(GameModel model, GameView view, Scene scene) {
         this.model = model;
         this.view = view;
+        this.input = new InputHandler();
+        attachInputHandlers(scene);
+    }
+
+    private void attachInputHandlers(Scene scene) {
+        scene.setOnKeyPressed(e -> {
+            input.keyPressed(e);
+            usingMouse = false;
+        });
+
+        scene.setOnKeyReleased(e -> {
+            input.keyReleased(e);
+        });
+
+        scene.setOnMouseMoved(e -> {
+            input.mouseMoved(e);
+            usingMouse = true;
+        });
     }
 
     public void start() {
@@ -36,10 +57,23 @@ public class GameController {
     }
 
     private void update(double deltaTime) {
-        double newX = model.getBallX() + model.getBallSpeedX() * deltaTime;
-        double newY = model.getBallY() + model.getBallSpeedY() * deltaTime;
+       if (model.isGameOver()) {
+           return;
+       }
 
-        model.setBallX(newX);
-        model.setBallY(newY);
+       if (usingMouse) {
+           double mouseX = input.getMouseX();
+           double newX = mouseX - model.getPaddleWidth() / 2;
+           model.setPaddleX(newX);
+       } else {
+           if (input.isLeftPressed()) {
+               model.movePaddleLeft(deltaTime);
+           }
+           if (input.isRightPressed()) {
+               model.movePaddleRight(deltaTime);
+           }
+       }
+
+       model.update(deltaTime);
     }
 }

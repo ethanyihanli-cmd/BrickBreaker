@@ -40,6 +40,19 @@ public class GameView {
 
         g.setFill(Color.rgb(150, 150, 150));
         g.fillText("Move: Mouse or arrow keys", canvas.getWidth() - 200, 30);
+
+        if (model.isGameOver()) {
+            g.setFill(Color.rgb(0, 0, 0, 0.7));
+            g.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+
+            g.setFill(Color.RED);
+            g.setFont(javafx.scene.text.Font.font("Arial", 28));
+            g.fillText("GAME OVER", canvas.getWidth() / 2 - 150, canvas.getHeight() / 2);
+
+            g.setFill(Color.WHITE);
+            g.setFont(javafx.scene.text.Font.font("Arial", 20));
+            g.fillText("Click or press R to restart", canvas.getWidth() / 2 - 110, canvas.getHeight() / 2 + 50);
+        }
     }
 
     public double getCanvasWidth() {
