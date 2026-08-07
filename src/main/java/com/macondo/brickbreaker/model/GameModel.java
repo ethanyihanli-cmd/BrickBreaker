@@ -1,5 +1,9 @@
 package com.macondo.brickbreaker.model;
 
+import java.util.ArrayList;
+import java.util.List;
+import javafx.scene.paint.Color;
+
 public class GameModel {
     //white small paddle to hit ball
     private double paddleX;
@@ -14,9 +18,12 @@ public class GameModel {
     private double ballSpeedX;
     private double ballSpeedY;
 
+    private List<Brick> bricks;
+
     private int score;
     private int lives;
     private boolean gameOver;
+    private boolean won;
 
     private final double CANVAS_WIDTH = 800;
     private final double CANVAS_HEIGHT = 600;
@@ -36,10 +43,40 @@ public class GameModel {
         score = 0;
         lives = 3;
         gameOver = false;
+        won = false;
+
+        bricks = new ArrayList<>();
+        createBricks();
+    }
+
+    private void createBricks() {
+        bricks.clear();
+        int rows = 8;
+        int cols = 10;
+        double brickWidth = 60;
+        double brickHeight = 20;
+        double spacing = 5;
+        double offsetX = 80;
+        double offsetY = 50;
+
+        Color[] colors = {
+                Color.RED, Color.ORANGE, Color.YELLOW, Color.GREEN,
+                Color.BLUE, Color.INDIGO, Color.VIOLET, Color.PINK
+        };
+
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < cols; col++) {
+                double x = offsetX + col * (brickWidth + spacing);
+                double y = offsetY + row * (brickHeight + spacing);
+                int hp = (row < 2) ? 2 : 1;
+                Color color = colors[row % colors.length];
+                bricks.add(new Brick(x, y, brickWidth, brickHeight, hp, color));
+            }
+        }
     }
 
     public void update(double deltaTime) {
-        if (gameOver) return;
+        if (gameOver || won) return;
 
         ballX += ballSpeedX * deltaTime;
         ballY += ballSpeedY * deltaTime;
@@ -80,6 +117,44 @@ public class GameModel {
 
     }
 
+    for (Brick brick : bricks) {
+        if (brick.isDestroyed()) continue;
+
+        if (ballIntersectsBrick(brick)) {
+            brick.hit();
+            if (brick.isDestroyed()) {
+                score += 10;
+            }
+            ballSpeedY = -ballSpeedY;
+            break;
+        }
+    }
+
+    boolean allDestroyed = true;
+    for (Brick brick : bricks) {
+        if (!brick.isDestroyed()) {
+            allDestroyed = false;
+            break;
+        }
+        if (allDestroyed) {
+            won = true;
+        }
+    }
+
+    private boolean ballIntersectsBrick(Brick brick) {
+        double bx = brick.getX();
+        double by = brick.getY();
+        double bw = brick.getWidth();
+        double bh = brick.getHeight();
+
+        double closestX = Math.max(bx, Math.min(ballX, bx + bw));
+        double closestY = Math.max(by, Math.min(ballY, by + bh));
+        double dx = ballX - closestX;
+        double dy = ballY - closestY;
+
+        return (dx * dx + dy * dy) < (ballRadius * ballRadius);
+    }
+
     public void movePaddleLeft(double deltaTime) {
         double speed = 400;
         paddleX -= speed * deltaTime;
@@ -116,6 +191,20 @@ public class GameModel {
         }
     }
 
+    public void resetGame() {
+        paddleX = 400 - paddleWidth / 2;
+        paddleY = 560;
+        ballX = 400;
+        ballY = 540 - ballRadius;
+        ballSpeedX = 200;
+        ballSpeedY = -250;
+        score = 0;
+        lives = 3;
+        gameOver = false;
+        won = false;
+        createBricks();
+    }
+
     public double getPaddleX() { return paddleX; }
     public double getPaddleY() { return paddleY; }
     public double getPaddleWidth() { return paddleWidth; }
@@ -132,7 +221,11 @@ public class GameModel {
     public int getScore() { return score; }
     public int getLives() { return lives; }
     public boolean isGameOver() { return gameOver; }
+    public boolean isWon() { return won; }
+    public List<Brick> getBricks() { return bricks; }
+
 
     public void addScore(int points) { score += points; }
     public void setGameOver(boolean over) { gameOver = over; }
+    public void setWon(boolean won) { this.won = won; }
 }

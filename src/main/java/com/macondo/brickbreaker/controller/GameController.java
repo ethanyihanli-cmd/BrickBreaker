@@ -34,6 +34,20 @@ public class GameController {
             input.mouseMoved(e);
             usingMouse = true;
         });
+
+        scene.setOnKeyPressed( e -> {
+            input.keyPressed(e);
+            usingMouse = false;
+            if (e.getCode().toString().equals("R") && (model.isGameOver() || model.isWon())) {
+                model.resetGame();
+            }
+        });
+
+        scene.setOnMouseClicked(e -> {
+            if (model.isGameOver() || model.isWon()) {
+                model.resetGame();
+            }
+        });
     }
 
     public void start() {
