@@ -2,6 +2,7 @@ package com.macondo.brickbreaker.view;
 
 import com.macondo.brickbreaker.model.Brick;
 import com.macondo.brickbreaker.model.GameModel;
+import com.macondo.brickbreaker.model.PowerUp;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
@@ -41,6 +42,25 @@ public class GameView {
                 g.setFont(Font.font("Arial", 10));
                 g.fillText(String.valueOf(brick.getHitPoints()), x + w/2 - 4, y + h/2 + 4);
             }
+        }
+
+        for (PowerUp p : model.getPowerUps()) {
+            if (!p.isActive()) continue;
+
+            double x = p.getX();
+            double y = p.getY();
+            double w = p.getWidth();
+            double h = p.getHeight();
+
+            g.setFill(p.getColor().deriveColor(1, 1, 1, 0.3));
+            g.fillOval(x - 5, y - 5, w + 10, h + 10);
+
+            g.setFill(p.getColor());
+            g.fillRoundRect(x, y, w, h, 5, 5);
+            g.setFill(Color.WHITE);
+            g.setFont(Font.font("Arial", FontWeight.BOLD, 12));
+            g.fillText(p.getSymbol(), x + w/2 - 6, y + h/2 + 5);
+
         }
 
         g.setFill(Color.rgb(80, 80, 200));

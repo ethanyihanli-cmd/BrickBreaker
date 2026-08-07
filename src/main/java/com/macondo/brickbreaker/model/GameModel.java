@@ -20,6 +20,8 @@ public class GameModel {
 
     private List<Brick> bricks;
 
+    private List<PowerUp> powerUps;
+
     private int score;
     private int lives;
     private boolean gameOver;
@@ -27,6 +29,7 @@ public class GameModel {
 
     private final double CANVAS_WIDTH = 800;
     private final double CANVAS_HEIGHT = 600;
+    private java.util.Random random;
 
     public GameModel() {
         paddleWidth = 100;
@@ -45,7 +48,9 @@ public class GameModel {
         gameOver = false;
         won = false;
 
+        random = new java.util.Random();
         bricks = new ArrayList<>();
+        powerUps = new ArrayList<>();
         createBricks();
     }
 
@@ -102,12 +107,12 @@ public class GameModel {
 
         if (ballSpeedY > 0) {
             if (ballY + ballRadius >= paddleY &&
-                ballY + ballRadius <= paddleY + paddleHeight + 10) {
+                    ballY + ballRadius <= paddleY + paddleHeight + 10) {
 
                 if (ballX >= paddleX && ballX <= paddleX + paddleWidth) {
                     double hitPos = (ballX - paddleX) / paddleWidth;
                     double angle = (hitPos - 0.5) * Math.PI * 0.7;
-                    double speed = Math.sqrt(ballSpeedX * ballSpeedX + ballSpeedY *ballSpeedY);
+                    double speed = Math.sqrt(ballSpeedX * ballSpeedX + ballSpeedY * ballSpeedY);
                     ballSpeedX = speed * Math.sin(angle);
                     ballSpeedY = -speed * Math.cos(angle);
                     ballY = paddleY - ballRadius;
@@ -115,31 +120,59 @@ public class GameModel {
             }
         }
 
-    }
 
-    for (Brick brick : bricks) {
-        if (brick.isDestroyed()) continue;
+        for (Brick brick : bricks) {
+            if (brick.isDestroyed()) continue;
 
-        if (ballIntersectsBrick(brick)) {
-            brick.hit();
-            if (brick.isDestroyed()) {
-                score += 10;
+            if (ballIntersectsBrick(brick)) {
+                brick.hit();
+                if (brick.isDestroyed()) {
+                    score += 10;
+
+                    if (random.nextDouble() < 0.15) {
+                        powerUps.add(new PowerUp(
+                                brick.getX() + brick.getWidth() / 2 - 10,
+                                brick.getY() + brick.getHeight() / 2 - 10,
+                                getRandomPowerUpType()
+                        ));
+                    }
+                }
+                ballSpeedY = -ballSpeedY;
+                break;
             }
-            ballSpeedY = -ballSpeedY;
-            break;
         }
-    }
 
-    boolean allDestroyed = true;
-    for (Brick brick : bricks) {
-        if (!brick.isDestroyed()) {
-            allDestroyed = false;
-            break;
+        boolean allDestroyed = true;
+        for (Brick brick : bricks) {
+            if (!brick.isDestroyed()) {
+                allDestroyed = false;
+                break;
+            }
         }
         if (allDestroyed) {
             won = true;
         }
+
+        for (PowerUp p : powerUps) {
+            p.update(deltaTime);
+        }
+
+        powerUps.removeIf(p -> p.getY() > CANVAS_HEIGHT);
+
+        for (PowerUp p : powerUps) {
+            if (p.isActive() && !p.isCollected()) {
+                if (p.getX() + p.getWidth() > paddleX &&
+                        p.getX() < paddleX + paddleWidth &&
+                        p.getY() + p.getHeight() > paddleY &&
+                        p.getY() < paddleY + paddleHeight) {
+                    applyPowerUp(p);
+                    p.setCollected(true);
+                }
+            }
+        }
+        powerUps.removeIf(p -> p.isCollected());
     }
+
 
     private boolean ballIntersectsBrick(Brick brick) {
         double bx = brick.getX();
@@ -153,6 +186,31 @@ public class GameModel {
         double dy = ballY - closestY;
 
         return (dx * dx + dy * dy) < (ballRadius * ballRadius);
+    }
+
+    private PowerUp.PowerUpType getRandomPowerUpType() {
+        PowerUp.PowerUpType[] types = PowerUp.PowerUpType.values();
+        return types[random.nextInt(types.length)];
+    }
+
+    private void applyPowerUp(PowerUp p) {
+        switch (p.getType()) {
+            case WIDER_PADDLE:
+                paddleWidth = Math.min(200, paddleWidth + 30);
+                break;
+            case EXTRA_LIFE:
+                lives++;
+                break;
+            case SLOW_BALL:
+                double speed = Math.sqrt(ballSpeedX * ballSpeedX + ballSpeedY * ballSpeedY);
+                double newSpeed = Math.max(100, speed * 0.7);
+                double angle = Math.atan2(ballSpeedY, ballSpeedX);
+                ballSpeedX = newSpeed * Math.cos(angle);
+                ballSpeedY = newSpeed * Math.sin(angle);
+                break;
+            case MULTI_BALL:
+                break;
+        }
     }
 
     public void movePaddleLeft(double deltaTime) {
@@ -192,6 +250,7 @@ public class GameModel {
     }
 
     public void resetGame() {
+        paddleWidth = 100;
         paddleX = 400 - paddleWidth / 2;
         paddleY = 560;
         ballX = 400;
@@ -202,6 +261,7 @@ public class GameModel {
         lives = 3;
         gameOver = false;
         won = false;
+        powerUps.clear();
         createBricks();
     }
 
@@ -223,9 +283,9 @@ public class GameModel {
     public boolean isGameOver() { return gameOver; }
     public boolean isWon() { return won; }
     public List<Brick> getBricks() { return bricks; }
+    public List<PowerUp> getPowerUps() { return powerUps; }
 
 
-    public void addScore(int points) { score += points; }
     public void setGameOver(boolean over) { gameOver = over; }
     public void setWon(boolean won) { this.won = won; }
 }
