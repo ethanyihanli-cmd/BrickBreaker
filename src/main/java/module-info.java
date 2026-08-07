@@ -1,6 +1,8 @@
 module com.macondo.brickbreaker {
     requires javafx.controls;
     requires javafx.fxml;
+    requires java.desktop;
+    requires javafx.media;
 
 
     opens com.macondo.brickbreaker to javafx.fxml;
@@ -9,5 +11,6 @@ module com.macondo.brickbreaker {
     exports com.macondo.brickbreaker.input;
     exports com.macondo.brickbreaker.model;
     exports com.macondo.brickbreaker.view;
+    exports com.macondo.brickbreaker.util;
 
 }

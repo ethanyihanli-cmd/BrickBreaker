@@ -3,6 +3,7 @@ package com.macondo.brickbreaker.model;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.scene.paint.Color;
+import com.macondo.brickbreaker.util.SoundManager;
 
 public class GameModel {
     //white small paddle to hit ball
@@ -12,9 +13,7 @@ public class GameModel {
     private double paddleHeight;
 
     private List<Ball> balls;
-
     private List<Brick> bricks;
-
     private List<PowerUp> powerUps;
 
     private int score;
@@ -112,6 +111,7 @@ public class GameModel {
             }
 
             if (ball.getY() + ball.getRadius() > CANVAS_HEIGHT) {
+                SoundManager.getInstance().playLose();
                 ball.setActive(false);
             }
         }
@@ -133,6 +133,7 @@ public class GameModel {
                     ball.getY() + ball.getRadius() <= paddleY + paddleHeight + 10) {
 
                     if(ball.getX() >= paddleX && ball.getX() <= paddleX + paddleWidth) {
+                        SoundManager.getInstance().playHit();
                         double hitPos = (ball.getX() - paddleX) / paddleWidth;
                         double angle = (hitPos - 0.5) * Math.PI * 0.7;
                         double speed = Math.sqrt(ball.getVx() * ball.getVx() + ball.getVy() * ball.getVy());
@@ -187,7 +188,8 @@ public class GameModel {
         for (Brick brick : bricks) {
             if (brick.isDestroyed()) continue;
 
-            if (ballIntersectsBrick(brick)) {
+            if (ballIntersectsBrick(ball, brick)) {
+                SoundManager.getInstance().playBrick();
                 brick.hit();
                 if (brick.isDestroyed()) {
                     score += 10;
@@ -215,6 +217,7 @@ public class GameModel {
             }
         }
         if (allDestroyed) {
+            SoundManager.getInstance().playWin();
             won = true;
         }
 
@@ -230,6 +233,7 @@ public class GameModel {
                         p.getX() < paddleX + paddleWidth &&
                         p.getY() + p.getHeight() > paddleY &&
                         p.getY() < paddleY + paddleHeight) {
+                    SoundManager.getInstance().playPowerup();
                     applyPowerUp(p);
                     p.setCollected(true);
                 }
