@@ -11,12 +11,7 @@ public class GameModel {
     private double paddleWidth;
     private double paddleHeight;
 
-    //ball to hit on
-    private double ballX;
-    private double ballY;
-    private double ballRadius;
-    private double ballSpeedX;
-    private double ballSpeedY;
+    private List<Ball> balls;
 
     private List<Brick> bricks;
 
@@ -31,11 +26,24 @@ public class GameModel {
     private final double CANVAS_HEIGHT = 600;
     private java.util.Random random;
 
+
+
+    //ball to hit on
+    private double ballX;
+    private double ballY;
+    private double ballRadius;
+    private double ballSpeedX;
+    private double ballSpeedY;
+
+
     public GameModel() {
         paddleWidth = 100;
         paddleHeight = 15;
         paddleX = 400 - paddleWidth / 2;
         paddleY = 560;
+
+        balls = new ArrayList<>();
+        balls.add(new Ball(400, 540, 10, 200, -250));
 
         ballRadius = 10;
         ballX = 400;
@@ -83,6 +91,61 @@ public class GameModel {
     public void update(double deltaTime) {
         if (gameOver || won) return;
 
+        for (Ball ball : balls) {
+            ball.update(deltaTime);
+        }
+
+        for (Ball ball : balls) {
+            if (ball.getX() - ball.getRadius() < 0) {
+                ball.setX(ball.getRadius());
+                ball.reflectX();
+            }
+
+            if (ball.getX() + ball.getRadius() > CANVAS_WIDTH) {
+                ball.setX(CANVAS_WIDTH - ball.getRadius());
+                ball.reflectX();
+            }
+
+            if (ball.getY() - ball.getRadius() < 0) {
+                ball.setY(ball.getRadius());
+                ball.reflectY();
+            }
+
+            if (ball.getY() + ball.getRadius() > CANVAS_HEIGHT) {
+                ball.setActive(false);
+            }
+        }
+
+        balls.removeIf(b -> !b.isActive());
+
+        if (balls.isEmpty()) {
+            loseLife();
+            if (lives > 0) {
+                Ball newBall = new Ball(400, 540, 10, 200, -250);
+                balls.add(newBall);
+            }
+            return;
+        }
+
+        for (Ball ball : balls) {
+            if (ball.getVy() > 0) {
+                if (ball.getY() + ball.getRadius() >= paddleY &&
+                    ball.getY() + ball.getRadius() <= paddleY + paddleHeight + 10) {
+
+                    if(ball.getX() >= paddleX && ball.getX() <= paddleX + paddleWidth) {
+                        double hitPos = (ball.getX() - paddleX) / paddleWidth;
+                        double angle = (hitPos - 0.5) * Math.PI * 0.7;
+                        double speed = Math.sqrt(ball.getVx() * ball.getVx() + ball.getVy() * ball.getVy());
+                        ball.setVx(speed * Math.sin(angle));
+                        ball.setVy(-speed * Math.cos(angle));
+                        ball.setY(paddleY - ball.getRadius());
+                    }
+                }
+            }
+        }
+
+
+
         ballX += ballSpeedX * deltaTime;
         ballY += ballSpeedY * deltaTime;
 
@@ -120,7 +183,7 @@ public class GameModel {
             }
         }
 
-
+    for (Ball ball : balls) {
         for (Brick brick : bricks) {
             if (brick.isDestroyed()) continue;
 
@@ -137,10 +200,12 @@ public class GameModel {
                         ));
                     }
                 }
+                ball.reflectY();
                 ballSpeedY = -ballSpeedY;
                 break;
             }
         }
+    }
 
         boolean allDestroyed = true;
         for (Brick brick : bricks) {
@@ -179,6 +244,9 @@ public class GameModel {
         double by = brick.getY();
         double bw = brick.getWidth();
         double bh = brick.getHeight();
+        double ballX = ball.getX();
+        double ballY = ball.getY();
+        double r = ball.getRadius();
 
         double closestX = Math.max(bx, Math.min(ballX, bx + bw));
         double closestY = Math.max(by, Math.min(ballY, by + bh));
@@ -209,6 +277,18 @@ public class GameModel {
                 ballSpeedY = newSpeed * Math.sin(angle);
                 break;
             case MULTI_BALL:
+                for (int i = 0; i < 2; i++) {
+                    double angle = Math.PI / 4 + i * Math.PI / 2;
+                    double speed = 200;
+                    Ball b = new Ball(
+                            400 + (i * 30 -15),
+                            540,
+                            10,
+                            speed * Math.cos(angle),
+                            speed * Math.sin(angle)
+                    );
+                    balls.add(b);
+                }
                 break;
         }
     }
@@ -270,7 +350,6 @@ public class GameModel {
     public double getPaddleWidth() { return paddleWidth; }
     public double getPaddleHeight() { return paddleHeight; }
 
-
     public double getBallX() { return ballX; }
     public double getBallY() { return ballY; }
     public double getBallRadius() { return ballRadius; }
@@ -282,6 +361,7 @@ public class GameModel {
     public int getLives() { return lives; }
     public boolean isGameOver() { return gameOver; }
     public boolean isWon() { return won; }
+    public List<Ball> getBalls() { return balls; }
     public List<Brick> getBricks() { return bricks; }
     public List<PowerUp> getPowerUps() { return powerUps; }
 
@@ -289,3 +369,4 @@ public class GameModel {
     public void setGameOver(boolean over) { gameOver = over; }
     public void setWon(boolean won) { this.won = won; }
 }
+
