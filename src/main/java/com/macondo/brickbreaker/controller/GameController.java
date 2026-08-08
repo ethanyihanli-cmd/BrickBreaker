@@ -71,7 +71,7 @@ public class GameController {
     }
 
     private void update(double deltaTime) {
-       if (model.isGameOver()) {
+       if (model.isGameOver() || model.isWon()) {
            return;
        }
 

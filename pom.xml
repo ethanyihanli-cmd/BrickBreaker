@@ -26,7 +26,6 @@
             <artifactId>javafx-fxml</artifactId>
             <version>${javafx.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
@@ -55,7 +54,7 @@
                         <!-- Default configuration for running with: mvn clean javafx:run -->
                         <id>default-cli</id>
                         <configuration>
-                            <mainClass>com.macondo.brickbreaker.launcher</mainClass>
+                            <mainClass>com.macondo.brickbreaker.Launcher</mainClass>
                             <launcher>app</launcher>
                         </configuration>
                     </execution>
@@ -64,4 +63,3 @@
         </plugins>
     </build>
 </project>
-

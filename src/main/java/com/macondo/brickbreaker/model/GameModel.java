@@ -145,45 +145,6 @@ public class GameModel {
             }
         }
 
-
-
-        ballX += ballSpeedX * deltaTime;
-        ballY += ballSpeedY * deltaTime;
-
-        if (ballX - ballRadius < 0) {
-            ballX = ballRadius;
-            ballSpeedX = -ballSpeedX;
-        }
-        if (ballX + ballRadius > CANVAS_WIDTH) {
-            ballX = CANVAS_WIDTH - ballRadius;
-            ballSpeedX = -ballSpeedX;
-        }
-
-        if (ballY - ballRadius < 0) {
-            ballY = ballRadius;
-            ballSpeedY = -ballSpeedY;
-        }
-        if (ballY + ballRadius > CANVAS_HEIGHT) {
-            loseLife();
-            resetBall();
-            return;
-        }
-
-        if (ballSpeedY > 0) {
-            if (ballY + ballRadius >= paddleY &&
-                    ballY + ballRadius <= paddleY + paddleHeight + 10) {
-
-                if (ballX >= paddleX && ballX <= paddleX + paddleWidth) {
-                    double hitPos = (ballX - paddleX) / paddleWidth;
-                    double angle = (hitPos - 0.5) * Math.PI * 0.7;
-                    double speed = Math.sqrt(ballSpeedX * ballSpeedX + ballSpeedY * ballSpeedY);
-                    ballSpeedX = speed * Math.sin(angle);
-                    ballSpeedY = -speed * Math.cos(angle);
-                    ballY = paddleY - ballRadius;
-                }
-            }
-        }
-
     for (Ball ball : balls) {
         for (Brick brick : bricks) {
             if (brick.isDestroyed()) continue;
@@ -243,7 +204,7 @@ public class GameModel {
     }
 
 
-    private boolean ballIntersectsBrick(Brick brick) {
+    private boolean ballIntersectsBrick(Ball ball, Brick brick) {
         double bx = brick.getX();
         double by = brick.getY();
         double bw = brick.getWidth();
@@ -257,7 +218,7 @@ public class GameModel {
         double dx = ballX - closestX;
         double dy = ballY - closestY;
 
-        return (dx * dx + dy * dy) < (ballRadius * ballRadius);
+        return (dx * dx + dy * dy) < (r * r);
     }
 
     private PowerUp.PowerUpType getRandomPowerUpType() {
@@ -273,14 +234,22 @@ public class GameModel {
             case EXTRA_LIFE:
                 lives++;
                 break;
-            case SLOW_BALL:
+            case SLOW_BALL: {
+                for (Ball ball : balls) {
+                    double speed = Math.sqrt(ball.getVx() * ball.getVx() + ball.getVy() * ball.getVy());
+                    double newSpeed = Math.max(100, speed * 0.7);
+                    double angle = Math.atan2(ball.getVy(), ball.getVx());
+                    ball.setVx(newSpeed * Math.cos(angle));
+                    ball.setVy(newSpeed * Math.sin(angle));
+                }
                 double speed = Math.sqrt(ballSpeedX * ballSpeedX + ballSpeedY * ballSpeedY);
                 double newSpeed = Math.max(100, speed * 0.7);
                 double angle = Math.atan2(ballSpeedY, ballSpeedX);
                 ballSpeedX = newSpeed * Math.cos(angle);
                 ballSpeedY = newSpeed * Math.sin(angle);
                 break;
-            case MULTI_BALL:
+            }
+            case MULTI_BALL: {
                 for (int i = 0; i < 2; i++) {
                     double angle = Math.PI / 4 + i * Math.PI / 2;
                     double speed = 200;
@@ -294,6 +263,7 @@ public class GameModel {
                     balls.add(b);
                 }
                 break;
+            }
         }
     }
 
@@ -337,6 +307,8 @@ public class GameModel {
         paddleWidth = 100;
         paddleX = 400 - paddleWidth / 2;
         paddleY = 560;
+        balls.clear();
+        balls.add(new Ball(400, 540, 10, 200, -250));
         ballX = 400;
         ballY = 540 - ballRadius;
         ballSpeedX = 200;
@@ -373,4 +345,3 @@ public class GameModel {
     public void setGameOver(boolean over) { gameOver = over; }
     public void setWon(boolean won) { this.won = won; }
 }
-

@@ -2,7 +2,6 @@ module com.macondo.brickbreaker {
     requires javafx.controls;
     requires javafx.fxml;
     requires java.desktop;
-    requires javafx.media;
 
 
     opens com.macondo.brickbreaker to javafx.fxml;
